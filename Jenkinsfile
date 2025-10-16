@@ -7,6 +7,11 @@ tools {
 }
 
 stages {
+    stage ('test') {
+        steps {
+            sh 'echo "new stage"'
+        }
+    }
     stage('Build') {
         steps {
             // Get some code from a GitHub repository
