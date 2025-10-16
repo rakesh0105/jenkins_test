@@ -1,47 +1,32 @@
 pipeline {
-    agent {
-        label 'windows'
-    }
-    
-    tools {
-        // Install the Maven version configured as "M3" and add it to the path.
-        maven "MVN3"
-    }
+agent any
 
-    stages {
-        stage('pull scm') {
-            steps {
-                // Get some code from a GitHub repository
-                git credentialsId: 'github', url: 'git@github.com:sathishbob/jenkins_test.git'
-            }
+tools {
+    // Install the Maven version configured as "M3" and add it to the path.
+    maven "mvn2"
+}
+
+stages {
+    stage('Build') {
+        steps {
+            // Get some code from a GitHub repository
+            git credentialsId: 'github', url: 'git@github.com:rakesh0105/jenkins_test.git'
+
+            // Run Maven on a Unix agent.
+            sh "mvn -Dmaven.test.failure.ignore=true -f api-gateway clean package"
+
+            // To run Maven on a Windows agent, use
+            // bat "mvn -Dmaven.test.failure.ignore=true clean package"
         }
-        
-        stage('Build') {
-            steps {
-                bat "mvn -Dmaven.test.failure.ignore=true -f api-gateway/ clean package"
-            }
-                            
-        }
-        
-        stage('archive') {
-            steps {
+
+        post {
+            // If Maven was able to run the tests, even if some of the test
+            // failed, record the test results and archive the jar file.
+            success {
+                junit 'api-gateway/target/surefire-reports/*.xml'
                 archiveArtifacts artifacts: 'api-gateway/target/*.jar', followSymlinks: false
             }
         }
-        
-        stage('publish test result') {
-            steps {
-                junit 'api-gateway/target/surefire-reports/*.xml'
-            }
-        }
-
-        stage('test') {
-            agent {
-                label 'linux'
-            }
-            steps {
-               sh "echo testing"
-            }
-        }
     }
+}
 }
